@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Wallet, Target, CheckCircle2 } from "lucide-react";
 import { FinancesTab } from "@/components/finances/FinancesTab";
 import { GoalsTab } from "@/components/goals/GoalsTab";
 import { HabitsTab } from "@/components/habits/HabitsTab";
+import { useTasks } from "@/hooks/useStore";
 
 const TABS = [
   { id: "finances", label: "Финансы", icon: Wallet },
@@ -16,6 +17,8 @@ type TabId = (typeof TABS)[number]["id"];
 export default function Home() {
   const [tab, setTab] = useState<TabId>("finances");
   const [lsWarning, setLsWarning] = useState(false);
+  const [tasks] = useTasks();
+  const scheduledNotifs = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     try {
@@ -29,6 +32,38 @@ export default function Home() {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
   }, []);
+
+  // Schedule task notifications
+  useEffect(() => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const now = new Date();
+
+    tasks.forEach((task) => {
+      if (task.done || !task.dueDate || !task.dueTime) return;
+      if (scheduledNotifs.current.has(task.id)) return;
+      scheduledNotifs.current.add(task.id);
+
+      const taskAt = new Date(`${task.dueDate}T${task.dueTime}:00`);
+      const msUntil = taskAt.getTime() - now.getTime();
+
+      const notify = () => {
+        navigator.serviceWorker?.ready.then((sw) => {
+          sw.showNotification("Задача", {
+            body: task.text,
+            icon: "/icon-192.png",
+            badge: "/icon-192.png",
+            tag: `task-${task.id}`,
+          });
+        });
+      };
+
+      if (msUntil <= 0) {
+        notify();
+      } else {
+        setTimeout(notify, msUntil);
+      }
+    });
+  }, [tasks]);
 
   const activeTab = TABS.find((t) => t.id === tab)!;
 

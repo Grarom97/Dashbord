@@ -14,6 +14,7 @@ export interface Task {
   text: string;
   done: boolean;
   dueDate?: string;
+  dueTime?: string; // "HH:MM" — if set, notification fires at dueDate+dueTime
   goalId?: string;
 }
 

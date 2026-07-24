@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Check, X, Target } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Check, X, Target, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ export function GoalsTab() {
   // New task form
   const [tText, setTText] = useState("");
   const [tDue, setTDue] = useState("");
+  const [tDueTime, setTDueTime] = useState("");
   const [tGoalId, setTGoalId] = useState("none");
 
   const sym = CURRENCY_SYMBOLS[settings.currency] ?? settings.currency;
@@ -75,10 +76,11 @@ export function GoalsTab() {
       text: tText,
       done: false,
       dueDate: tDue || undefined,
+      dueTime: (tDue && tDueTime) ? tDueTime : undefined,
       goalId: tGoalId === "none" ? undefined : tGoalId,
     };
     setTasks((prev) => [task, ...prev]);
-    setTText(""); setTDue(""); setTGoalId("none");
+    setTText(""); setTDue(""); setTDueTime(""); setTGoalId("none");
     setTaskOpen(false);
   }
 
@@ -234,9 +236,23 @@ export function GoalsTab() {
                 <Input
                   type="date"
                   value={tDue}
-                  onChange={(e) => setTDue(e.target.value)}
+                  onChange={(e) => { setTDue(e.target.value); if (!e.target.value) setTDueTime(""); }}
                 />
               </div>
+              {tDue && (
+                <div>
+                  <Label>Время напоминания (необязательно)</Label>
+                  <Input
+                    type="time"
+                    value={tDueTime}
+                    onChange={(e) => setTDueTime(e.target.value)}
+                    className="font-mono"
+                  />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    Уведомление придёт в это время, если приложение открыто
+                  </p>
+                </div>
+              )}
               <div>
                 <Label>Привязать к цели</Label>
                 <Select value={tGoalId} onValueChange={setTGoalId}>
@@ -401,8 +417,13 @@ export function GoalsTab() {
                           {t.text}
                         </span>
                         {t.dueDate && (
-                          <span className="font-mono tabular-nums text-xs text-[var(--text-muted)]">
-                            {t.dueDate}
+                          <span className={`font-mono tabular-nums text-xs flex items-center gap-0.5 ${
+                            !t.done && t.dueDate < new Date().toISOString().split("T")[0]
+                              ? "text-[var(--destructive)]"
+                              : "text-[var(--text-muted)]"
+                          }`}>
+                            {t.dueTime && <Clock className="h-3 w-3" />}
+                            {t.dueDate}{t.dueTime ? ` ${t.dueTime}` : ""}
                           </span>
                         )}
                         <button
@@ -438,8 +459,13 @@ export function GoalsTab() {
                       {t.text}
                     </span>
                     {t.dueDate && (
-                      <span className="font-mono tabular-nums text-xs text-[var(--text-muted)]">
-                        {t.dueDate}
+                      <span className={`font-mono tabular-nums text-xs flex items-center gap-0.5 ${
+                        !t.done && t.dueDate < new Date().toISOString().split("T")[0]
+                          ? "text-[var(--destructive)]"
+                          : "text-[var(--text-muted)]"
+                      }`}>
+                        {t.dueTime && <Clock className="h-3 w-3" />}
+                        {t.dueDate}{t.dueTime ? ` ${t.dueTime}` : ""}
                       </span>
                     )}
                     <button
