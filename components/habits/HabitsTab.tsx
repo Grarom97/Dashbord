@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Plus, Trash2, Flame, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, Flame, CheckCircle2, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,9 +69,43 @@ export function HabitsTab() {
   const [emoji, setEmoji] = useState("✅");
   const [freq, setFreq] = useState<"daily" | "custom">("daily");
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [reminderTime, setReminderTime] = useState("");
+
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission>("default");
 
   const last7 = getLast7Days();
   const todayStr = today();
+
+  // Sync permission state on mount
+  useEffect(() => {
+    if ("Notification" in window) setNotifPerm(Notification.permission);
+  }, []);
+
+  // Show notification once per day when habits are pending
+  useEffect(() => {
+    if (notifPerm !== "granted" || habits.length === 0) return;
+    const alreadyShown = sessionStorage.getItem("habits-notified") === todayStr;
+    if (alreadyShown) return;
+    const pending = habits.filter(
+      (h) => isTargetDay(h, todayStr) && !h.completions.includes(todayStr)
+    );
+    if (pending.length === 0) return;
+    navigator.serviceWorker?.ready.then((sw) => {
+      sw.showNotification("Привычки на сегодня", {
+        body: pending.map((h) => `${h.emoji} ${h.name}`).join("\n"),
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: "habits-daily",
+      });
+      sessionStorage.setItem("habits-notified", todayStr);
+    });
+  }, [notifPerm, habits, todayStr]);
+
+  async function requestNotifPermission() {
+    if (!("Notification" in window)) return;
+    const perm = await Notification.requestPermission();
+    setNotifPerm(perm);
+  }
 
   function addHabit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,9 +117,10 @@ export function HabitsTab() {
       targetDays: freq === "daily" ? "daily" : selectedDays,
       completions: [],
       createdAt: new Date().toISOString(),
+      ...(reminderTime ? { reminderTime } : {}),
     };
     setHabits((prev) => [...prev, newHabit]);
-    setName(""); setEmoji("✅"); setFreq("daily"); setSelectedDays([1, 2, 3, 4, 5]);
+    setName(""); setEmoji("✅"); setFreq("daily"); setSelectedDays([1, 2, 3, 4, 5]); setReminderTime("");
     setOpen(false);
   }
 
@@ -116,6 +151,26 @@ export function HabitsTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Notification permission banner */}
+      {notifPerm === "default" && (
+        <button
+          onClick={requestNotifPermission}
+          className="w-full rounded-xl bg-[var(--surface)] border border-[var(--border)] p-3 flex items-center gap-3 text-left"
+        >
+          <Bell className="h-5 w-5 text-[var(--accent)] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[var(--text-primary)]">Включить уведомления</p>
+            <p className="text-xs text-[var(--text-muted)]">Напомним о невыполненных привычках</p>
+          </div>
+        </button>
+      )}
+      {notifPerm === "denied" && (
+        <div className="flex items-center gap-2 px-1 py-1">
+          <BellOff className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
+          <span className="text-xs text-[var(--text-muted)]">Уведомления заблокированы в настройках браузера</span>
+        </div>
+      )}
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button className="w-full h-12">
@@ -195,6 +250,18 @@ export function HabitsTab() {
               </div>
             )}
 
+            {notifPerm === "granted" && (
+              <div>
+                <Label>Время напоминания (необязательно)</Label>
+                <Input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            )}
+
             <Button type="submit" className="w-full h-12 mt-1">Создать</Button>
           </form>
         </DialogContent>
@@ -248,12 +315,20 @@ export function HabitsTab() {
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                       {habit.name}
                     </p>
-                    {streak > 0 && (
-                      <div className="flex items-center gap-0.5 text-xs text-[var(--accent)]">
-                        <Flame className="h-3 w-3" />
-                        <span className="font-mono tabular-nums">{streak} дн.</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {streak > 0 && (
+                        <div className="flex items-center gap-0.5 text-xs text-[var(--accent)]">
+                          <Flame className="h-3 w-3" />
+                          <span className="font-mono tabular-nums">{streak} дн.</span>
+                        </div>
+                      )}
+                      {habit.reminderTime && (
+                        <div className="flex items-center gap-0.5 text-xs text-[var(--text-muted)]">
+                          <Bell className="h-3 w-3" />
+                          <span className="font-mono tabular-nums">{habit.reminderTime}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <button
