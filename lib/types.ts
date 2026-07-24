@@ -39,11 +39,17 @@ export interface Habit {
   reminderTime?: string;
 }
 
+export interface BalanceSetup {
+  amount: number;
+  setAt: string; // ISO date "YYYY-MM-DD"
+}
+
 export interface Settings {
   currency: "MDL" | "EUR";
   language: "ru" | "en";
   categories: string[];
   pushSubscription?: string;
+  balanceSetup?: BalanceSetup;
 }
 
 export const DEFAULT_CATEGORIES = [
