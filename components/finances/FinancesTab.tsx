@@ -158,6 +158,14 @@ export function FinancesTab() {
     setShowForm(false);
   }
 
+  function addTransactions(items: Omit<Transaction, "id">[]) {
+    setTransactions((prev) => [
+      ...items.map((item) => ({ ...item, id: crypto.randomUUID() })),
+      ...prev,
+    ]);
+    setShowForm(false);
+  }
+
   function deleteTransaction(id: string) {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   }
@@ -355,7 +363,7 @@ export function FinancesTab() {
       {/* Form container */}
       {showForm && (
         <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
-          <TransactionForm onSave={addTransaction} />
+          <TransactionForm onSave={addTransaction} onSaveMany={addTransactions} />
         </div>
       )}
 
