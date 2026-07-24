@@ -30,9 +30,10 @@ function getDaysUntil31(): number {
   return Math.max(1, diff);
 }
 
-function isSameMonth(dateStr: string): boolean {
+function isCurrentMonth(dateStr: string): boolean {
+  const stored = new Date(dateStr + "T12:00:00");
   const now = new Date();
-  return dateStr.startsWith(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  return stored.getFullYear() === now.getFullYear() && stored.getMonth() === now.getMonth();
 }
 
 const COLORS = [
@@ -69,7 +70,7 @@ export function FinancesTab() {
   const todayStr = new Date().toISOString().split("T")[0];
 
   const needsBalanceSetup =
-    !settings.balanceSetup || !isSameMonth(settings.balanceSetup.setAt);
+    !settings.balanceSetup || !isCurrentMonth(settings.balanceSetup.setAt);
 
   function saveBalance(e: React.FormEvent) {
     e.preventDefault();
