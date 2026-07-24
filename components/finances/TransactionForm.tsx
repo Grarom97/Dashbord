@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Transaction, CURRENCY_SYMBOLS } from "@/lib/types";
+import { Transaction } from "@/lib/types";
 import { useSettings } from "@/hooks/useStore";
 
 function today() {
@@ -104,18 +104,18 @@ export function TransactionForm({ onSave }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
-      {/* Type toggle */}
-      <div className="flex rounded-xl overflow-hidden border border-[var(--border)]">
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      {/* Type toggle — pill style */}
+      <div className="flex gap-1 rounded-xl bg-[var(--surface-hover)] p-1">
         {(["expense", "income"] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => { setType(t); setCategory(""); }}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               type === t
-                ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                : "bg-[var(--surface)] text-[var(--text-secondary)]"
+                ? "bg-[var(--accent)] text-black"
+                : "text-[var(--text-secondary)]"
             }`}
           >
             {t === "expense" ? "Расход" : "Доход"}
@@ -123,21 +123,49 @@ export function TransactionForm({ onSave }: Props) {
         ))}
       </div>
 
+      {/* Camera scan zone */}
+      {type === "expense" && (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={scanning}
+          className="w-full rounded-xl border-2 border-dashed border-[var(--border)] p-6 text-center transition-colors hover:border-[var(--accent)] disabled:opacity-60"
+        >
+          {scanning ? (
+            <Loader2 className="h-6 w-6 mx-auto animate-spin text-[var(--accent)]" />
+          ) : (
+            <Camera className="h-6 w-6 mx-auto text-[var(--text-secondary)]" />
+          )}
+          <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mt-2">
+            {scanning ? "Распознаю чек…" : "Сканировать чек"}
+          </p>
+          {!scanning && (
+            <p className="text-xs text-[var(--text-muted)] mt-1 normal-case tracking-normal">
+              Сфотографируй — AI заполнит поля сам
+            </p>
+          )}
+        </button>
+      )}
+
       {/* Scan result banner */}
       {scanResult && (
-        <div className="rounded-xl bg-[var(--surface-2)] p-3 text-sm border border-[var(--border)]">
-          <p className="text-[var(--text-secondary)] mb-1">Чек распознан:</p>
-          <p className="text-[var(--text-primary)] font-medium">{scanResult.store}</p>
+        <div className="rounded-xl bg-[var(--accent-muted)] border border-[var(--accent)] p-3">
+          <p className="text-xs uppercase tracking-widest text-[var(--accent)] mb-1">
+            Чек распознан
+          </p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            {scanResult.store}
+          </p>
           {scanResult.items?.slice(0, 3).map((it, i) => (
-            <p key={i} className="text-[var(--text-muted)] text-xs">
-              {it.name} — {it.price}
+            <p key={i} className="text-xs text-[var(--text-secondary)]">
+              {it.name} — <span className="font-mono tabular-nums">{it.price}</span>
             </p>
           ))}
         </div>
       )}
 
       {scanError && (
-        <p className="text-[var(--danger)] text-sm px-1">{scanError}</p>
+        <p className="text-sm text-[var(--destructive)] px-1">{scanError}</p>
       )}
 
       {/* Amount + currency */}
@@ -152,10 +180,10 @@ export function TransactionForm({ onSave }: Props) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="mono text-right text-lg"
+            className="font-mono tabular-nums text-right text-lg"
           />
         </div>
-        <div className="w-24">
+        <div className="w-28">
           <Label>Валюта</Label>
           <Select value={currency} onValueChange={(v) => setCurrency(v as "MDL" | "EUR")}>
             <SelectTrigger>
@@ -207,29 +235,11 @@ export function TransactionForm({ onSave }: Props) {
         />
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 mt-1">
-        <Button type="submit" className="flex-1">
-          <Plus className="h-4 w-4" />
-          Добавить
-        </Button>
-        {type === "expense" && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => fileRef.current?.click()}
-            disabled={scanning}
-            title="Сканировать чек"
-          >
-            {scanning ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Camera className="h-4 w-4" />
-            )}
-          </Button>
-        )}
-      </div>
+      {/* Submit */}
+      <Button type="submit" className="w-full h-12 text-base mt-1">
+        <Plus className="h-4 w-4" />
+        Добавить
+      </Button>
 
       <input
         ref={fileRef}

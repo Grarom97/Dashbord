@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Trash2, Flame } from "lucide-react";
+import { Plus, Trash2, Flame, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,10 +115,10 @@ export function HabitsTab() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
+    <div className="flex flex-col gap-4">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="w-full">
+          <Button className="w-full h-12">
             <Plus className="h-4 w-4" /> Добавить привычку
           </Button>
         </DialogTrigger>
@@ -126,7 +126,7 @@ export function HabitsTab() {
           <DialogHeader>
             <DialogTitle>Новая привычка</DialogTitle>
           </DialogHeader>
-          <form onSubmit={addHabit} className="flex flex-col gap-3">
+          <form onSubmit={addHabit} className="flex flex-col gap-4">
             <div className="flex gap-2">
               <div className="w-16">
                 <Label>Эмодзи</Label>
@@ -150,14 +150,14 @@ export function HabitsTab() {
 
             <div>
               <Label>Частота</Label>
-              <div className="flex rounded-xl overflow-hidden border border-[var(--border)] mt-1">
+              <div className="flex gap-1 rounded-xl bg-[var(--surface-hover)] p-1">
                 <button
                   type="button"
                   onClick={() => setFreq("daily")}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
                     freq === "daily"
-                      ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                      : "bg-[var(--surface)] text-[var(--text-secondary)]"
+                      ? "bg-[var(--accent)] text-black"
+                      : "text-[var(--text-secondary)]"
                   }`}
                 >
                   Каждый день
@@ -165,10 +165,10 @@ export function HabitsTab() {
                 <button
                   type="button"
                   onClick={() => setFreq("custom")}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
                     freq === "custom"
-                      ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                      : "bg-[var(--surface)] text-[var(--text-secondary)]"
+                      ? "bg-[var(--accent)] text-black"
+                      : "text-[var(--text-secondary)]"
                   }`}
                 >
                   Дни недели
@@ -185,8 +185,8 @@ export function HabitsTab() {
                     onClick={() => toggleDay(d.value)}
                     className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
                       selectedDays.includes(d.value)
-                        ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                        : "bg-[var(--surface-2)] text-[var(--text-secondary)]"
+                        ? "bg-[var(--accent)] text-black"
+                        : "bg-[var(--surface-hover)] text-[var(--text-secondary)]"
                     }`}
                   >
                     {d.label}
@@ -195,39 +195,23 @@ export function HabitsTab() {
               </div>
             )}
 
-            <Button type="submit" className="mt-1">Создать</Button>
+            <Button type="submit" className="w-full h-12 mt-1">Создать</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       {habits.length === 0 ? (
-        <div className="text-center py-10 text-[var(--text-muted)]">
-          <p className="text-4xl mb-3">✅</p>
-          <p>Нет привычек</p>
-          <p className="text-sm mt-1">Добавь первую привычку выше ↑</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <CheckCircle2 className="h-12 w-12 opacity-30 text-[var(--text-secondary)]" />
+          <p className="text-sm text-[var(--text-secondary)] mt-4">
+            Нет привычек
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Добавь первую привычку выше
+          </p>
         </div>
       ) : (
         <>
-          {/* Week header */}
-          <div className="flex items-center pr-10">
-            <div className="flex-1" />
-            {last7.map((d) => {
-              const dayIdx = new Date(d + "T12:00:00").getDay();
-              return (
-                <div
-                  key={d}
-                  className={`w-9 text-center text-xs ${
-                    d === todayStr
-                      ? "text-[var(--accent)] font-semibold"
-                      : "text-[var(--text-muted)]"
-                  }`}
-                >
-                  {DAY_NAMES[dayIdx]}
-                </div>
-              );
-            })}
-          </div>
-
           {habits.map((habit) => {
             const streak = getStreak(habit);
             const isTodayTarget = isTargetDay(habit, todayStr);
@@ -236,10 +220,10 @@ export function HabitsTab() {
             return (
               <div
                 key={habit.id}
-                className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-3"
+                className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-3"
               >
-                <div className="flex items-center gap-2">
-                  {/* Today toggle */}
+                {/* Row 1: circle + name + streak + delete */}
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() =>
                       isTodayTarget && toggleCompletion(habit.id, todayStr)
@@ -247,64 +231,77 @@ export function HabitsTab() {
                     disabled={!isTodayTarget}
                     className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg shrink-0 transition-all ${
                       doneToday
-                        ? "border-[var(--success)] bg-[var(--success)]/20"
+                        ? "border-[var(--accent)] bg-[var(--accent-muted)]"
                         : isTodayTarget
                         ? "border-[var(--border)] hover:border-[var(--accent)]"
                         : "border-[var(--border)] opacity-30"
                     }`}
                   >
-                    {doneToday ? "✓" : habit.emoji}
+                    {doneToday ? (
+                      <span className="text-[var(--accent)]">✓</span>
+                    ) : (
+                      habit.emoji
+                    )}
                   </button>
 
-                  {/* Name + streak */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                       {habit.name}
                     </p>
                     {streak > 0 && (
-                      <div className="flex items-center gap-0.5 text-xs text-[var(--warning)]">
+                      <div className="flex items-center gap-0.5 text-xs text-[var(--accent)]">
                         <Flame className="h-3 w-3" />
-                        <span>{streak} дн.</span>
+                        <span className="font-mono tabular-nums">{streak} дн.</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Week grid */}
-                  <div className="flex gap-0 shrink-0">
-                    {last7.map((d) => {
-                      const isTarget = isTargetDay(habit, d);
-                      const done = habit.completions.includes(d);
-                      const isToday = d === todayStr;
-                      return (
+                  <button
+                    onClick={() => deleteHabit(habit.id)}
+                    className="text-[var(--text-muted)] hover:text-[var(--destructive)] transition-colors shrink-0 p-1"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Row 2: week grid with day labels */}
+                <div className="flex gap-1 mt-3">
+                  {last7.map((d) => {
+                    const isTarget = isTargetDay(habit, d);
+                    const done = habit.completions.includes(d);
+                    const isToday = d === todayStr;
+                    const dayIdx = new Date(d + "T12:00:00").getDay();
+                    return (
+                      <div key={d} className="flex-1 flex flex-col items-center gap-1">
+                        <span
+                          className={`text-[9px] uppercase tracking-wide ${
+                            isToday
+                              ? "text-[var(--accent)] font-semibold"
+                              : "text-[var(--text-muted)]"
+                          }`}
+                        >
+                          {DAY_NAMES[dayIdx]}
+                        </span>
                         <button
-                          key={d}
                           onClick={() =>
                             isTarget && toggleCompletion(habit.id, d)
                           }
                           disabled={!isTarget}
-                          className={`w-9 h-7 rounded-md mx-0.5 text-xs font-medium transition-colors ${
+                          className={`w-full h-8 rounded-md text-xs font-medium transition-colors ${
                             !isTarget
                               ? "text-[var(--text-muted)] opacity-20"
                               : done
-                              ? "bg-[var(--success)]/30 text-[var(--success)]"
+                              ? "bg-[var(--accent-muted)] text-[var(--accent)]"
                               : isToday
-                              ? "bg-[var(--surface-2)] text-[var(--accent)] border border-[var(--accent)]"
-                              : "bg-[var(--surface-2)] text-[var(--danger)]"
+                              ? "bg-[var(--surface-hover)] text-[var(--accent)] border border-[var(--accent)]"
+                              : "bg-[var(--surface-hover)] text-[var(--text-muted)]"
                           }`}
                         >
                           {!isTarget ? "–" : done ? "✓" : isToday ? "○" : "✗"}
                         </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => deleteHabit(habit.id)}
-                    className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors ml-1 shrink-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

@@ -4,28 +4,33 @@
   :root {
     --background: #0F0F0F;
     --surface: #1A1A1A;
-    --surface-2: #222222;
+    --surface-hover: #222222;
     --border: #2A2A2A;
     --accent: #E8A87C;
     --accent-hover: #d4935f;
+    --accent-muted: rgba(232, 168, 124, 0.15);
     --text-primary: #F0F0F0;
     --text-secondary: #888888;
     --text-muted: #555555;
-    --success: #4CAF50;
-    --danger: #E57373;
+    --success: #7CE8A8;
     --warning: #FFB74D;
+    --destructive: #E87C7C;
     --radius: 12px;
 
+    /* legacy aliases — older class references keep working */
+    --surface-2: var(--surface-hover);
+    --danger: var(--destructive);
+
+    /* shadcn-compatible aliases */
     --foreground: var(--text-primary);
     --card: var(--surface);
     --card-foreground: var(--text-primary);
     --primary: var(--accent);
     --primary-foreground: #0F0F0F;
-    --secondary: var(--surface-2);
+    --secondary: var(--surface-hover);
     --secondary-foreground: var(--text-primary);
-    --muted: var(--surface-2);
+    --muted: var(--surface-hover);
     --muted-foreground: var(--text-secondary);
-    --destructive: var(--danger);
     --input: var(--border);
     --ring: var(--accent);
   }
@@ -35,16 +40,17 @@
   --color-background: var(--background);
   --color-foreground: var(--text-primary);
   --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-muted);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-success: var(--success);
-  --color-danger: var(--danger);
   --color-warning: var(--warning);
-  --font-mono: ui-monospace, monospace;
+  --color-destructive: var(--destructive);
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 }
 
 * {
@@ -67,6 +73,7 @@ body {
 
 .mono {
   font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .scrollbar-none::-webkit-scrollbar {

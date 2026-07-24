@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronUp, Plus, Wallet } from "lucide-react";
 import { TransactionForm } from "./TransactionForm";
 import { useTransactions, useSettings } from "@/hooks/useStore";
 import { Transaction, CURRENCY_SYMBOLS } from "@/lib/types";
@@ -29,7 +29,7 @@ const COLORS = [
 
 function fmt(amount: number, currency: string) {
   const sym = CURRENCY_SYMBOLS[currency] ?? currency;
-  return `${amount.toFixed(2)} ${sym}`;
+  return `${sym} ${amount.toFixed(2)}`;
 }
 
 function getMonths() {
@@ -115,26 +115,32 @@ export function FinancesTab() {
   const months = getMonths();
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
+    <div className="flex flex-col gap-4">
       {/* Today summary */}
-      <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4">
-        <p className="text-[var(--text-secondary)] text-sm">Сегодня потрачено</p>
-        <p className="mono text-3xl font-bold text-[var(--accent)] text-right mt-1">
+      <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+        <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">
+          Сегодня потрачено
+        </p>
+        <p className="font-mono tabular-nums text-2xl font-semibold text-[var(--accent)] mt-2">
           {fmt(todayTotal, settings.currency)}
         </p>
       </div>
 
-      {/* Monthly balance */}
+      {/* Monthly stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-3">
-          <p className="text-[var(--text-secondary)] text-xs">Расходы</p>
-          <p className="mono text-lg font-semibold text-[var(--danger)] text-right">
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+          <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">
+            Расходы
+          </p>
+          <p className="font-mono tabular-nums text-2xl font-semibold text-[var(--destructive)] mt-2">
             −{fmt(mainCurrencyExpenses, settings.currency)}
           </p>
         </div>
-        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-3">
-          <p className="text-[var(--text-secondary)] text-xs">Доходы</p>
-          <p className="mono text-lg font-semibold text-[var(--success)] text-right">
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+          <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">
+            Доходы
+          </p>
+          <p className="font-mono tabular-nums text-2xl font-semibold text-[var(--success)] mt-2">
             +{fmt(mainCurrencyIncome, settings.currency)}
           </p>
         </div>
@@ -142,13 +148,15 @@ export function FinancesTab() {
 
       {/* Balance card */}
       {mainCurrencyIncome > 0 && (
-        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-3">
-          <p className="text-[var(--text-secondary)] text-xs">Баланс за месяц</p>
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+          <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)]">
+            Баланс за месяц
+          </p>
           <p
-            className={`mono text-xl font-bold text-right ${
+            className={`font-mono tabular-nums text-2xl font-semibold mt-2 ${
               mainCurrencyIncome - mainCurrencyExpenses >= 0
                 ? "text-[var(--success)]"
-                : "text-[var(--danger)]"
+                : "text-[var(--destructive)]"
             }`}
           >
             {mainCurrencyIncome - mainCurrencyExpenses >= 0 ? "+" : ""}
@@ -159,8 +167,10 @@ export function FinancesTab() {
 
       {/* Donut chart */}
       {chartData.length > 0 && (
-        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4">
-          <p className="text-[var(--text-secondary)] text-sm mb-2">По категориям</p>
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+          <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-2">
+            По категориям
+          </p>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
@@ -173,7 +183,7 @@ export function FinancesTab() {
                 dataKey="value"
               >
                 {chartData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />
                 ))}
               </Pie>
               <Tooltip
@@ -181,7 +191,7 @@ export function FinancesTab() {
                 contentStyle={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   color: "var(--text-primary)",
                 }}
               />
@@ -197,27 +207,30 @@ export function FinancesTab() {
         </div>
       )}
 
-      {/* Add transaction */}
-      <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4">
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center justify-between w-full text-left"
-        >
-          <span className="font-medium text-[var(--text-primary)]">
+      {/* Add transaction button */}
+      <Button
+        onClick={() => setShowForm((v) => !v)}
+        className="w-full h-12 rounded-xl bg-[var(--accent)] text-black font-medium hover:bg-[var(--accent-hover)]"
+      >
+        {showForm ? (
+          <>
+            <ChevronUp className="h-4 w-4" />
+            Свернуть
+          </>
+        ) : (
+          <>
+            <Plus className="h-4 w-4" />
             Добавить запись
-          </span>
-          {showForm ? (
-            <ChevronUp className="h-5 w-5 text-[var(--text-secondary)]" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-[var(--text-secondary)]" />
-          )}
-        </button>
-        {showForm && (
-          <div className="mt-4">
-            <TransactionForm onSave={addTransaction} />
-          </div>
+          </>
         )}
-      </div>
+      </Button>
+
+      {/* Form container */}
+      {showForm && (
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+          <TransactionForm onSave={addTransaction} />
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-2">
@@ -251,10 +264,14 @@ export function FinancesTab() {
       {/* Transaction list */}
       <div className="flex flex-col gap-2">
         {monthTransactions.length === 0 ? (
-          <div className="text-center py-10 text-[var(--text-muted)]">
-            <p className="text-4xl mb-3">💸</p>
-            <p>Нет записей за этот период</p>
-            <p className="text-sm mt-1">Добавь первую запись выше ↑</p>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Wallet className="h-12 w-12 opacity-30 text-[var(--text-secondary)]" />
+            <p className="text-sm text-[var(--text-secondary)] mt-4">
+              Нет записей за этот период
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              Добавь первую запись выше
+            </p>
           </div>
         ) : (
           monthTransactions.map((t) => (
@@ -263,17 +280,19 @@ export function FinancesTab() {
               className="flex items-center justify-between rounded-xl bg-[var(--surface)] border border-[var(--border)] px-4 py-3"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-[var(--text-primary)] text-sm font-medium truncate">
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                   {t.category}
                 </p>
                 {t.comment && (
-                  <p className="text-[var(--text-muted)] text-xs truncate">{t.comment}</p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {t.comment}
+                  </p>
                 )}
-                <p className="text-[var(--text-muted)] text-xs">{t.date}</p>
+                <p className="text-xs text-[var(--text-muted)]">{t.date}</p>
               </div>
               <div className="flex items-center gap-3 ml-2">
                 <p
-                  className={`mono text-sm font-semibold ${
+                  className={`font-mono tabular-nums text-sm font-semibold ${
                     t.type === "income"
                       ? "text-[var(--success)]"
                       : "text-[var(--text-primary)]"
@@ -284,7 +303,7 @@ export function FinancesTab() {
                 </p>
                 <button
                   onClick={() => deleteTransaction(t.id)}
-                  className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                  className="text-[var(--text-muted)] hover:text-[var(--destructive)] transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

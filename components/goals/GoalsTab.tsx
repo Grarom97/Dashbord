@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Check, X, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useGoals, useTasks } from "@/hooks/useStore";
-import { Goal, Task } from "@/lib/types";
-import { useSettings } from "@/hooks/useStore";
-import { CURRENCY_SYMBOLS } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGoals, useTasks, useSettings } from "@/hooks/useStore";
+import { Task, CURRENCY_SYMBOLS } from "@/lib/types";
 
 export function GoalsTab() {
   const [goals, setGoals] = useGoals();
@@ -136,12 +141,12 @@ export function GoalsTab() {
   const doneStandalone = standaloneTasks.filter((t) => t.done);
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
+    <div className="flex flex-col gap-4">
       {/* Header buttons */}
       <div className="flex gap-2">
         <Dialog open={goalOpen} onOpenChange={setGoalOpen}>
           <DialogTrigger asChild>
-            <Button className="flex-1" size="sm">
+            <Button className="flex-1 h-11">
               <Plus className="h-4 w-4" /> Цель
             </Button>
           </DialogTrigger>
@@ -149,7 +154,7 @@ export function GoalsTab() {
             <DialogHeader>
               <DialogTitle>Новая цель</DialogTitle>
             </DialogHeader>
-            <form onSubmit={addGoal} className="flex flex-col gap-3">
+            <form onSubmit={addGoal} className="flex flex-col gap-4">
               <div>
                 <Label>Название</Label>
                 <Input
@@ -183,7 +188,7 @@ export function GoalsTab() {
                     placeholder="5000"
                     value={gAmount}
                     onChange={(e) => setGAmount(e.target.value)}
-                    className="mono"
+                    className="font-mono tabular-nums"
                   />
                 </div>
                 <div>
@@ -193,18 +198,20 @@ export function GoalsTab() {
                     placeholder="0"
                     value={gCurrent}
                     onChange={(e) => setGCurrent(e.target.value)}
-                    className="mono"
+                    className="font-mono tabular-nums"
                   />
                 </div>
               </div>
-              <Button type="submit" className="mt-1">Создать цель</Button>
+              <Button type="submit" className="w-full h-12 mt-1">
+                Создать цель
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
 
         <Dialog open={taskOpen} onOpenChange={setTaskOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1" size="sm">
+            <Button variant="outline" className="flex-1 h-11">
               <Plus className="h-4 w-4" /> Задача
             </Button>
           </DialogTrigger>
@@ -212,7 +219,7 @@ export function GoalsTab() {
             <DialogHeader>
               <DialogTitle>Новая задача</DialogTitle>
             </DialogHeader>
-            <form onSubmit={addTask} className="flex flex-col gap-3">
+            <form onSubmit={addTask} className="flex flex-col gap-4">
               <div>
                 <Label>Задача</Label>
                 <Input
@@ -232,35 +239,38 @@ export function GoalsTab() {
               </div>
               <div>
                 <Label>Привязать к цели</Label>
-                <select
-                  value={tGoalId}
-                  onChange={(e) => setTGoalId(e.target.value)}
-                  className="flex h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                >
-                  <option value="none">Без цели</option>
-                  {activeGoals.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.title}
-                    </option>
-                  ))}
-                </select>
+                <Select value={tGoalId} onValueChange={setTGoalId}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Без цели</SelectItem>
+                    {activeGoals.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {g.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Button type="submit" className="mt-1">Добавить задачу</Button>
+              <Button type="submit" className="w-full h-12 mt-1">
+                Добавить задачу
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* View toggle */}
-      <div className="flex rounded-xl overflow-hidden border border-[var(--border)]">
+      {/* View toggle — pill style */}
+      <div className="flex gap-1 rounded-xl bg-[var(--surface-hover)] p-1">
         {(["active", "done"] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
               view === v
-                ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                : "bg-[var(--surface)] text-[var(--text-secondary)]"
+                ? "bg-[var(--accent)] text-black"
+                : "text-[var(--text-secondary)]"
             }`}
           >
             {v === "active" ? "Активные" : "Завершённые"}
@@ -270,12 +280,15 @@ export function GoalsTab() {
 
       {view === "active" ? (
         <>
-          {/* Goals */}
           {activeGoals.length === 0 && activeStandalone.length === 0 ? (
-            <div className="text-center py-10 text-[var(--text-muted)]">
-              <p className="text-4xl mb-3">🎯</p>
-              <p>Нет активных целей и задач</p>
-              <p className="text-sm mt-1">Добавь цель или задачу выше ↑</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Target className="h-12 w-12 opacity-30 text-[var(--text-secondary)]" />
+              <p className="text-sm text-[var(--text-secondary)] mt-4">
+                Нет активных целей и задач
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Добавь цель или задачу выше
+              </p>
             </div>
           ) : null}
 
@@ -290,14 +303,17 @@ export function GoalsTab() {
             return (
               <div
                 key={goal.id}
-                className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                className="rounded-xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
               >
-                <button
-                  onClick={() => setExpandedGoal(expanded ? null : goal.id)}
-                  className="flex items-start justify-between w-full p-4 text-left"
-                >
-                  <div className="flex-1 min-w-0 pr-2">
-                    <p className="font-medium text-[var(--text-primary)]">{goal.title}</p>
+                {/* Card header */}
+                <div className="flex items-start p-4 gap-2">
+                  <button
+                    onClick={() => setExpandedGoal(expanded ? null : goal.id)}
+                    className="flex-1 min-w-0 text-left"
+                  >
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                      {goal.title}
+                    </p>
                     {goal.targetDate && (
                       <p className="text-xs text-[var(--text-muted)] mt-0.5">
                         до {goal.targetDate}
@@ -306,7 +322,7 @@ export function GoalsTab() {
                     {allTasks.length > 0 && (
                       <div className="mt-2">
                         <Progress value={progress} className="h-1.5" />
-                        <p className="text-xs text-[var(--text-muted)] mt-1">
+                        <p className="font-mono tabular-nums text-xs text-[var(--text-muted)] mt-1">
                           {doneTasks}/{allTasks.length} задач
                         </p>
                       </div>
@@ -320,33 +336,38 @@ export function GoalsTab() {
                           )}
                           className="h-1.5"
                         />
-                        <p className="mono text-xs text-[var(--text-muted)] mt-1">
-                          {goal.currentAmount ?? 0} / {goal.targetAmount} {sym}
+                        <p className="font-mono tabular-nums text-xs text-[var(--text-muted)] mt-1">
+                          {sym} {goal.currentAmount ?? 0} / {goal.targetAmount}
                         </p>
                       </div>
                     )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={(e) => { e.stopPropagation(); toggleGoalDone(goal.id); }}
-                      className="text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
+                      onClick={() => toggleGoalDone(goal.id)}
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--success)] hover:bg-[var(--surface-hover)] transition-colors"
                       title="Завершить цель"
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteGoal(goal.id); }}
-                      className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      onClick={() => deleteGoal(goal.id)}
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--destructive)] hover:bg-[var(--surface-hover)] transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-                    {expanded ? (
-                      <ChevronUp className="h-4 w-4 text-[var(--text-secondary)]" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-[var(--text-secondary)]" />
-                    )}
+                    <button
+                      onClick={() => setExpandedGoal(expanded ? null : goal.id)}
+                      className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors"
+                    >
+                      {expanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
-                </button>
+                </div>
 
                 {expanded && (
                   <div className="px-4 pb-4 border-t border-[var(--border)] pt-3 flex flex-col gap-2">
@@ -355,7 +376,6 @@ export function GoalsTab() {
                         {goal.description}
                       </p>
                     )}
-                    {/* Inline subtasks */}
                     {inline.map((t) => (
                       <div key={t.id} className="flex items-center gap-2">
                         <Checkbox
@@ -369,7 +389,6 @@ export function GoalsTab() {
                         </span>
                       </div>
                     ))}
-                    {/* Linked tasks */}
                     {goalTasks.map((t) => (
                       <div key={t.id} className="flex items-center gap-2">
                         <Checkbox
@@ -382,17 +401,18 @@ export function GoalsTab() {
                           {t.text}
                         </span>
                         {t.dueDate && (
-                          <span className="text-xs text-[var(--text-muted)]">{t.dueDate}</span>
+                          <span className="font-mono tabular-nums text-xs text-[var(--text-muted)]">
+                            {t.dueDate}
+                          </span>
                         )}
                         <button
                           onClick={() => deleteTask(t.id)}
-                          className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                          className="text-[var(--text-muted)] hover:text-[var(--destructive)] transition-colors"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </div>
                     ))}
-                    {/* Add inline subtask */}
                     <InlineSubtaskInput
                       onAdd={(text) => addSubtask(goal.id, text)}
                     />
@@ -402,13 +422,12 @@ export function GoalsTab() {
             );
           })}
 
-          {/* Standalone tasks */}
           {activeStandalone.length > 0 && (
-            <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4">
-              <p className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+            <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4">
+              <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-3">
                 Задачи без цели
               </p>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {activeStandalone.map((t) => (
                   <div key={t.id} className="flex items-center gap-2">
                     <Checkbox
@@ -419,11 +438,13 @@ export function GoalsTab() {
                       {t.text}
                     </span>
                     {t.dueDate && (
-                      <span className="text-xs text-[var(--text-muted)]">{t.dueDate}</span>
+                      <span className="font-mono tabular-nums text-xs text-[var(--text-muted)]">
+                        {t.dueDate}
+                      </span>
                     )}
                     <button
                       onClick={() => deleteTask(t.id)}
-                      className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      className="text-[var(--text-muted)] hover:text-[var(--destructive)] transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -436,30 +457,33 @@ export function GoalsTab() {
       ) : (
         <>
           {doneGoals.length === 0 && doneStandalone.length === 0 ? (
-            <div className="text-center py-10 text-[var(--text-muted)]">
-              <p className="text-4xl mb-3">✅</p>
-              <p>Завершённых целей пока нет</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Check className="h-12 w-12 opacity-30 text-[var(--text-secondary)]" />
+              <p className="text-sm text-[var(--text-secondary)] mt-4">
+                Завершённых целей пока нет
+              </p>
             </div>
           ) : null}
           {doneGoals.map((g) => (
             <div
               key={g.id}
-              className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4 opacity-60"
+              className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-4 opacity-60"
             >
               <div className="flex items-center justify-between">
-                <p className="font-medium line-through text-[var(--text-secondary)]">
+                <p className="text-sm font-medium line-through text-[var(--text-secondary)]">
                   {g.title}
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <button
                     onClick={() => toggleGoalDone(g.id)}
-                    className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                    title="Вернуть в активные"
                   >
                     <ChevronUp className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => deleteGoal(g.id)}
-                    className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--destructive)] transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -487,10 +511,10 @@ function InlineSubtaskInput({ onAdd }: { onAdd: (text: string) => void }) {
         placeholder="Добавить подзадачу…"
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        className="h-8 text-xs"
+        className="h-9 text-xs"
       />
-      <Button type="submit" size="sm" variant="outline" className="h-8 px-2">
-        <Plus className="h-3 w-3" />
+      <Button type="submit" size="sm" variant="outline" className="h-9 px-3">
+        <Plus className="h-3.5 w-3.5" />
       </Button>
     </form>
   );

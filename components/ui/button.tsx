@@ -4,20 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-muted)] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-[var(--accent)] text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]",
+          "bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]",
         destructive:
-          "bg-[var(--danger)] text-[var(--text-primary)] hover:opacity-90",
+          "bg-[var(--destructive)] text-black hover:opacity-90",
         outline:
-          "border border-[var(--border)] bg-transparent hover:bg-[var(--surface-2)] text-[var(--text-primary)]",
+          "border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-hover)]",
         secondary:
-          "bg-[var(--surface-2)] text-[var(--text-primary)] hover:bg-[var(--border)]",
+          "bg-[var(--surface-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]",
         ghost:
-          "hover:bg-[var(--surface-2)] text-[var(--text-primary)]",
+          "text-[var(--text-primary)] hover:bg-[var(--surface-hover)]",
         link: "text-[var(--accent)] underline-offset-4 hover:underline",
       },
       size: {
